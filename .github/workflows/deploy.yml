@@ -28,7 +28,7 @@ jobs:
         run: |
           # Wails will only run frontend install/build, skip desktop binary
           wails build -nopackage -clean
-
+      
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
