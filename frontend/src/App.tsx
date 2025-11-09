@@ -118,6 +118,18 @@ function App() {
           </div>
         )}
       </div>
+      <footer className="text-center text-xs text-gray-400 mt-3">
+        Built with ❤️ by{" "}
+        
+        <a
+          href="https://github.com/iNoles"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-500 hover:underline"
+        >
+          Jonathan Steele
+        </a>
+      </footer>
     </div>
   );
 }
