@@ -1,23 +1,29 @@
-# 🧪 GoTesty
+# GoTesty
 
-A lightweight desktop and web tool for testing RESTful APIs — built with **Go**, **Wails**, **React**, and **TailwindCSS**.
+GoTesty is a lightweight, full-stack desktop and web tool for testing RESTful APIs.
+Built with Go, Wails, React, and TailwindCSS, it delivers a native-feeling API client without the overhead of heavyweight tools like Postman.
 
-GoTesty helps developers quickly send HTTP requests, inspect JSON responses, and save test configurations — all without the overhead of big tools like Postman.
+Designed for developers who want speed, clarity, and control across the entire stack.
 
----
+## Why GoTesty?
 
-## 🚀 Features
+GoTesty bridges backend performance with a modern frontend experience:
+- Fast — Go-powered HTTP engine
+- Simple — focused feature set, no clutter
+- Full-stack — backend logic + frontend UI in one cohesive app
+- Native — compiled binaries via Wails
+- Portable — desktop-first, web-ready architecture
 
-- 🧰 Built-in request builder (GET, POST, PUT, DELETE)
-- 📬 Custom headers and body support
-- 💡 Pretty JSON output viewer
-- 🌙 Clean, minimal UI with TailwindCSS
-- 💻 Cross-platform (macOS, Windows, Linux)
-- 🧱 Powered by Go + Wails for a native feel
+## Features
 
----
+- Built-in request builder (GET, POST, PUT, DELETE)
+- Custom headers and body support
+- Pretty JSON output viewer
+- Clean, minimal UI with TailwindCSS
+- Cross-platform (macOS, Windows, Linux)
+- Powered by Go + Wails for a native feel
 
-## 🏗️ Tech Stack
+## Tech Stack
 
 | Layer | Technology |
 |--------|-------------|
@@ -26,9 +32,7 @@ GoTesty helps developers quickly send HTTP requests, inspect JSON responses, and
 | Styling | TailwindCSS |
 | Packaging | Wails CLI |
 
----
-
-## 🧑‍💻 Getting Started
+## Getting Started
 
 ### Prerequisites
 - [Go 1.23+](https://go.dev/dl/)
