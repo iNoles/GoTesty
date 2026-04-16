@@ -23,6 +23,9 @@ GoTesty bridges backend performance with a modern frontend experience:
 - Cross-platform (macOS, Windows, Linux)
 - Powered by Go + Wails for a native feel
 
+## Screenshot
+![Main](main.png)
+
 ## Tech Stack
 
 | Layer | Technology |
