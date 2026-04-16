@@ -1,5 +1,20 @@
 # GoTesty
 
+<p align="center">
+  <img src="https://img.shields.io/badge/Go-1.23+-00ADD8?logo=go&logoColor=white" />
+  <img src="https://img.shields.io/badge/Wails-2.x-cc0000?logo=wails&logoColor=white" />
+  <img src="https://img.shields.io/badge/React-18+-61DAFB?logo=react&logoColor=black" />
+  <img src="https://img.shields.io/badge/Vite-5+-646CFF?logo=vite&logoColor=white" />
+  <img src="https://img.shields.io/badge/TailwindCSS-4.x-38B2AC?logo=tailwindcss&logoColor=white" />
+  <br/>
+  <img src="https://img.shields.io/badge/Platforms-macOS%20%7C%20Windows%20%7C%20Linux-333333" />
+  <img src="https://img.shields.io/badge/License-GPLv3-blue.svg" />
+  <img src="https://img.shields.io/badge/Status-Active-success" />
+  <br/>
+  <img src="https://img.shields.io/github/stars/iNoles/GoTesty?style=social" />
+  <img src="https://img.shields.io/github/forks/iNoles/GoTesty?style=social" />
+</p>
+
 GoTesty is a lightweight, full-stack desktop and web tool for testing RESTful APIs.
 Built with Go, Wails, React, and TailwindCSS, it delivers a native-feeling API client without the overhead of heavyweight tools like Postman.
 
