@@ -9,17 +9,24 @@ export default function PrettyResponse({
 }) {
   const [mode, setMode] = useState<"pretty" | "raw">("pretty");
 
-  // Normalize body so React can render it
+  //
+  // Normalize BODY so React can render it safely
+  //
   let normalizedBody = body;
+
   if (typeof body === "object") {
     try {
       normalizedBody = JSON.stringify(body, null, 2);
     } catch {
       normalizedBody = String(body);
     }
+  } else if (typeof body !== "string") {
+    normalizedBody = String(body);
   }
 
-  // Normalize content-type
+  //
+  // Normalize CONTENT-TYPE for both Web Edition + Desktop Edition
+  //
   const rawContentType =
     headers?.["Content-Type"] ||
     headers?.["content-type"] ||
@@ -36,6 +43,9 @@ export default function PrettyResponse({
     contentType.includes("application/xml") ||
     contentType.includes("text/xml");
 
+  //
+  // PRETTY FORMATTING
+  //
   let formatted = normalizedBody;
 
   if (mode === "pretty") {
@@ -58,15 +68,20 @@ export default function PrettyResponse({
       <div className="flex gap-2 mb-2">
         <button
           className={`px-3 py-1 rounded text-sm ${
-            mode === "pretty" ? "bg-blue-600 text-white" : "bg-gray-200"
+            mode === "pretty"
+              ? "bg-blue-600 text-white"
+              : "bg-gray-700 text-gray-200"
           }`}
           onClick={() => setMode("pretty")}
         >
           Pretty
         </button>
+
         <button
           className={`px-3 py-1 rounded text-sm ${
-            mode === "raw" ? "bg-blue-600 text-white" : "bg-gray-200"
+            mode === "raw"
+              ? "bg-blue-600 text-white"
+              : "bg-gray-700 text-gray-200"
           }`}
           onClick={() => setMode("raw")}
         >
@@ -75,13 +90,16 @@ export default function PrettyResponse({
       </div>
 
       {/* Viewer */}
-      <pre className="flex-1 bg-gray-100 p-3 rounded overflow-auto text-sm whitespace-pre-wrap">
+      <pre className="flex-1 bg-[#0f172a] text-gray-100 p-3 rounded overflow-auto text-sm whitespace-pre-wrap">
         {formatted}
       </pre>
     </div>
   );
 }
 
+//
+// XML PRETTY FORMATTER
+//
 function formatXML(xml: string) {
   try {
     const PADDING = "  ";
@@ -93,6 +111,7 @@ function formatXML(xml: string) {
       .split("\r\n")
       .forEach((node) => {
         let indent = 0;
+
         if (node.match(/.+<\/\w[^>]*>$/)) {
           indent = 0;
         } else if (node.match(/^<\/\w/)) {
