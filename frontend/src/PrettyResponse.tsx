@@ -1,14 +1,30 @@
 import { useState } from "react";
 
-export default function PrettyResponse({ body, headers }: { body: string; headers: any }) {
+export default function PrettyResponse({
+  body,
+  headers,
+}: {
+  body: string;
+  headers: any;
+}) {
   const [mode, setMode] = useState<"pretty" | "raw">("pretty");
 
-  const contentType = headers?.["Content-Type"]?.[0] || "";
+  // Normalize content-type for both Web Edition + Desktop Edition
+  const rawContentType =
+    headers?.["Content-Type"] ||
+    headers?.["content-type"] ||
+    headers?.["Content-type"] ||
+    "";
+
+  const contentType = Array.isArray(rawContentType)
+    ? rawContentType[0]
+    : rawContentType;
 
   const isJSON = contentType.includes("application/json");
   const isHTML = contentType.includes("text/html");
   const isXML =
-    contentType.includes("application/xml") || contentType.includes("text/xml");
+    contentType.includes("application/xml") ||
+    contentType.includes("text/xml");
 
   let formatted = body;
 
@@ -22,7 +38,7 @@ export default function PrettyResponse({ body, headers }: { body: string; header
     } else if (isXML) {
       formatted = formatXML(body);
     } else if (isHTML) {
-      formatted = body; // raw HTML preview
+      formatted = body;
     }
   }
 
