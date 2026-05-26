@@ -1,6 +1,6 @@
 import { useState } from "react";
-import PrettyResponse from "./PrettyResponse";
-import AuthPanel from "./AuthPanel";
+import PrettyResponse from "./PrettyResponse.js";
+import AuthPanel from "./AuthPanel.js";
 
 // Detect if running in browser (GitHub Pages) instead of Wails desktop
 const isWeb = () =>
