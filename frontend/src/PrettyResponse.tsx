@@ -4,12 +4,22 @@ export default function PrettyResponse({
   body,
   headers,
 }: {
-  body: string;
+  body: any;
   headers: any;
 }) {
   const [mode, setMode] = useState<"pretty" | "raw">("pretty");
 
-  // Normalize content-type for both Web Edition + Desktop Edition
+  // Normalize body so React can render it
+  let normalizedBody = body;
+  if (typeof body === "object") {
+    try {
+      normalizedBody = JSON.stringify(body, null, 2);
+    } catch {
+      normalizedBody = String(body);
+    }
+  }
+
+  // Normalize content-type
   const rawContentType =
     headers?.["Content-Type"] ||
     headers?.["content-type"] ||
@@ -26,19 +36,19 @@ export default function PrettyResponse({
     contentType.includes("application/xml") ||
     contentType.includes("text/xml");
 
-  let formatted = body;
+  let formatted = normalizedBody;
 
   if (mode === "pretty") {
     if (isJSON) {
       try {
-        formatted = JSON.stringify(JSON.parse(body), null, 2);
+        formatted = JSON.stringify(JSON.parse(normalizedBody), null, 2);
       } catch {
-        formatted = body;
+        formatted = normalizedBody;
       }
     } else if (isXML) {
-      formatted = formatXML(body);
+      formatted = formatXML(normalizedBody);
     } else if (isHTML) {
-      formatted = body;
+      formatted = normalizedBody;
     }
   }
 
