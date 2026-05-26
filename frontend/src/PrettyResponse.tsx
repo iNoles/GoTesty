@@ -1,0 +1,86 @@
+import { useState } from "react";
+
+export default function PrettyResponse({ body, headers }: { body: string; headers: any }) {
+  const [mode, setMode] = useState<"pretty" | "raw">("pretty");
+
+  const contentType = headers?.["Content-Type"]?.[0] || "";
+
+  const isJSON = contentType.includes("application/json");
+  const isHTML = contentType.includes("text/html");
+  const isXML =
+    contentType.includes("application/xml") || contentType.includes("text/xml");
+
+  let formatted = body;
+
+  if (mode === "pretty") {
+    if (isJSON) {
+      try {
+        formatted = JSON.stringify(JSON.parse(body), null, 2);
+      } catch {
+        formatted = body;
+      }
+    } else if (isXML) {
+      formatted = formatXML(body);
+    } else if (isHTML) {
+      formatted = body; // raw HTML preview
+    }
+  }
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Mode Switch */}
+      <div className="flex gap-2 mb-2">
+        <button
+          className={`px-3 py-1 rounded text-sm ${
+            mode === "pretty" ? "bg-blue-600 text-white" : "bg-gray-200"
+          }`}
+          onClick={() => setMode("pretty")}
+        >
+          Pretty
+        </button>
+        <button
+          className={`px-3 py-1 rounded text-sm ${
+            mode === "raw" ? "bg-blue-600 text-white" : "bg-gray-200"
+          }`}
+          onClick={() => setMode("raw")}
+        >
+          Raw
+        </button>
+      </div>
+
+      {/* Viewer */}
+      <pre className="flex-1 bg-gray-100 p-3 rounded overflow-auto text-sm whitespace-pre-wrap">
+        {formatted}
+      </pre>
+    </div>
+  );
+}
+
+function formatXML(xml: string) {
+  try {
+    const PADDING = "  ";
+    let formatted = "";
+    let pad = 0;
+
+    xml
+      .replace(/(>)(<)(\/*)/g, "$1\r\n$2$3")
+      .split("\r\n")
+      .forEach((node) => {
+        let indent = 0;
+        if (node.match(/.+<\/\w[^>]*>$/)) {
+          indent = 0;
+        } else if (node.match(/^<\/\w/)) {
+          if (pad !== 0) pad -= 1;
+        } else if (node.match(/^<\w[^>]*[^\/]>.*$/)) {
+          indent = 1;
+        }
+
+        formatted += PADDING.repeat(pad) + node + "\r\n";
+        pad += indent;
+      });
+
+    return formatted;
+  } catch {
+    return xml;
+  }
+}

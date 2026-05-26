@@ -1,25 +1,41 @@
 package main
 
 import (
-	"context"
+    "context"
+    "gotesty/backend/core"
 )
 
-// App struct
 type App struct {
-	ctx context.Context
+    ctx context.Context
 }
 
-// NewApp creates a new App application struct
 func NewApp() *App {
-	return &App{}
+    return &App{}
 }
 
-// startup is called when the app starts. The context is saved
-// so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
-	a.ctx = ctx
+    a.ctx = ctx
 }
 
-func (a *App) SendRequest(method, url string, headers map[string]string, body string) (*APIResponse, error) {
-    return SendRequest(method, url, headers, body)
+// This is the function Wails exposes to the frontend
+func (a *App) SendRequest(
+    method string,
+    url string,
+    headers map[string]string,
+    body string,
+    auth core.Auth,
+    vars core.Variables,
+) (*core.APIResponse, error) {
+
+    newURL, newHeaders, newBody := core.ApplyVariables(url, headers, body, vars)
+
+    opts := core.RequestOptions{
+        Method:  method,
+        URL:     newURL,
+        Headers: newHeaders,
+        Body:    newBody,
+        Auth:    auth,
+    }
+
+    return core.SendRequest(opts)
 }
