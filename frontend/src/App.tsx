@@ -1,7 +1,45 @@
 import { useState } from "react";
-import { SendRequest } from "../wailsjs/go/main/App.js";
-import AuthPanel from "./AuthPanel.js";
-import PrettyResponse from "./PrettyResponse.js";
+import PrettyResponse from "./PrettyResponse";
+import AuthPanel from "./AuthPanel";
+
+// Detect if running in browser (GitHub Pages) instead of Wails desktop
+const isWeb = () =>
+  typeof window !== "undefined" && !(window as any).go;
+
+// Browser-native request engine
+async function SendRequestWeb(
+  method: string,
+  url: string,
+  headers: any,
+  body: string
+) {
+  try {
+    const res = await fetch(url, {
+      method,
+      headers,
+      body: method !== "GET" && method !== "HEAD" ? body : undefined,
+    });
+
+    const text = await res.text();
+    let parsedBody: any = text;
+
+    try {
+      parsedBody = JSON.parse(text);
+    } catch {}
+
+    return {
+      Status: res.status,
+      Headers: Object.fromEntries(res.headers.entries()),
+      Body: parsedBody,
+    };
+  } catch (err: any) {
+    return {
+      Status: 0,
+      Headers: {},
+      Body: "Network error: " + err.message,
+    };
+  }
+}
 
 export default function App() {
   // Top-level tabs
@@ -10,60 +48,59 @@ export default function App() {
   // Request sub-tabs
   const [requestTab, setRequestTab] = useState("auth");
 
+  // Request state
   const [method, setMethod] = useState("GET");
   const [url, setUrl] = useState("https://api.github.com");
   const [headers, setHeaders] = useState('{"Content-Type": "application/json"}');
   const [body, setBody] = useState("");
   const [auth, setAuth] = useState<any>({ Type: "none" });
 
-  // ⭐ Query Params
-  const [queryParams, setQueryParams] = useState<
-    { key: string; value: string; enabled: boolean }[]
-  >([]);
+  // Query Params
+  type QueryParam = { key: string; value: string; enabled: boolean };
+  const [queryParams, setQueryParams] = useState<QueryParam[]>([]);
 
-  const addQueryParam = () => {
+  const addQueryParam = () =>
     setQueryParams((prev) => [...prev, { key: "", value: "", enabled: true }]);
+
+  const updateQueryParam = <K extends keyof QueryParam>(
+    index: number,
+    field: K,
+    value: QueryParam[K]
+  ) => {
+    setQueryParams((prev) => {
+      const copy = [...prev];
+      copy[index] = { ...copy[index], [field]: value };
+      return copy;
+    });
   };
 
-  const updateQueryParam = (
-  index: number,
-  field: "key" | "value" | "enabled",
-  value: string | boolean
-) => {
-  setQueryParams((prev) => {
-    const copy = [...prev];
-    copy[index] = { ...copy[index], [field]: value };
-    return copy;
-  });
-};
-
-  const deleteQueryParam = (index: number) => {
+  const deleteQueryParam = (index: number) =>
     setQueryParams((prev) => prev.filter((_, i) => i !== index));
-  };
 
-  // ⭐ Variables
+  // Variables
   const [variables, setVariables] = useState<{ [key: string]: string }>({});
 
-  const updateVar = (key: string, value: string) => {
+  const updateVar = (key: string, value: string) =>
     setVariables((prev) => ({ ...prev, [key]: value }));
-  };
 
-  const deleteVar = (key: string) => {
+  const deleteVar = (key: string) =>
     setVariables((prev) => {
       const copy = { ...prev };
       delete copy[key];
       return copy;
     });
-  };
 
   const addVar = () => updateVar("newVar", "");
 
+  // Response
   const [response, setResponse] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
+  // Send request (desktop or web)
   const send = async () => {
     setLoading(true);
 
+    // Parse headers
     let parsedHeaders = {};
     try {
       parsedHeaders = JSON.parse(headers);
@@ -73,27 +110,44 @@ export default function App() {
       return;
     }
 
-    // ⭐ Build final URL with query params
+    // Build final URL with query params
     let finalUrl = url;
 
-    const activeParams = queryParams.filter((p) => p.enabled && p.key.trim() !== "");
+    const activeParams = queryParams.filter(
+      (p) => p.enabled && p.key.trim() !== ""
+    );
 
     if (activeParams.length > 0) {
       const qs = activeParams
-        .map((p) => `${encodeURIComponent(p.key)}=${encodeURIComponent(p.value)}`)
+        .map(
+          (p) =>
+            `${encodeURIComponent(p.key)}=${encodeURIComponent(p.value)}`
+        )
         .join("&");
 
       finalUrl = url.includes("?") ? `${url}&${qs}` : `${url}?${qs}`;
     }
 
-    try {
-      const res = await SendRequest(method, finalUrl, parsedHeaders, body, auth, variables);
-      setResponse(res);
-    } catch {
-      setResponse({ Status: 0, Body: "Error sending request" });
-    } finally {
-      setLoading(false);
+    let res;
+
+    if (isWeb()) {
+      // Web Edition
+      res = await SendRequestWeb(method, finalUrl, parsedHeaders, body);
+    } else {
+      // Desktop Edition (Wails)
+      const { SendRequest } = (window as any).go.main.App;
+      res = await SendRequest(
+        method,
+        finalUrl,
+        parsedHeaders,
+        body,
+        auth,
+        variables
+      );
     }
+
+    setResponse(res);
+    setLoading(false);
   };
 
   return (
@@ -102,7 +156,7 @@ export default function App() {
       {/* HEADER */}
       <header className="px-6 py-4 bg-[#1e293b] border-b border-gray-700 shadow flex items-center justify-between">
         <h1 className="text-3xl font-bold text-brand">GoTesty</h1>
-        
+
         <span className="text-xs text-gray-400 tracking-wide">
           Lightweight API Testing Tool
         </span>
@@ -110,7 +164,7 @@ export default function App() {
 
       <main className="max-w-4xl mx-auto p-6 space-y-8">
 
-        {/* ⭐ TOP-LEVEL TABS */}
+        {/* TOP-LEVEL TABS */}
         <div className="flex gap-6 border-b border-gray-700 pb-2">
           <button
             onClick={() => setActiveTab("request")}
@@ -135,7 +189,7 @@ export default function App() {
           </button>
         </div>
 
-        {/* ⭐ REQUEST TAB */}
+        {/* REQUEST TAB */}
         {activeTab === "request" && (
           <section className="bg-[#1e293b] border border-gray-700 rounded-xl shadow-lg p-6 space-y-6">
 
@@ -171,54 +225,27 @@ export default function App() {
               </button>
             </div>
 
-            {/* ⭐ REQUEST SUB-TABS */}
+            {/* REQUEST SUB-TABS */}
             <div className="flex gap-6 border-b border-gray-700 pb-2">
-              <button
-                onClick={() => setRequestTab("auth")}
-                className={`pb-2 text-sm ${
-                  requestTab === "auth"
-                    ? "text-brand border-b-2 border-brand"
-                    : "text-gray-400"
-                }`}
-              >
-                Auth
-              </button>
-
-              <button
-                onClick={() => setRequestTab("headers")}
-                className={`pb-2 text-sm ${
-                  requestTab === "headers"
-                    ? "text-brand border-b-2 border-brand"
-                    : "text-gray-400"
-                }`}
-              >
-                Headers
-              </button>
-
-              <button
-                onClick={() => setRequestTab("body")}
-                className={`pb-2 text-sm ${
-                  requestTab === "body"
-                    ? "text-brand border-b-2 border-brand"
-                    : "text-gray-400"
-                }`}
-              >
-                Body
-              </button>
-
-              <button
-                onClick={() => setRequestTab("query")}
-                className={`pb-2 text-sm ${
-                  requestTab === "query"
-                    ? "text-brand border-b-2 border-brand"
-                    : "text-gray-400"
-                }`}
-              >
-                Query Params
-              </button>
+              {["auth", "headers", "body", "query"].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setRequestTab(tab)}
+                  className={`pb-2 text-sm ${
+                    requestTab === tab
+                      ? "text-brand border-b-2 border-brand"
+                      : "text-gray-400"
+                  }`}
+                >
+                  {tab === "auth" && "Auth"}
+                  {tab === "headers" && "Headers"}
+                  {tab === "body" && "Body"}
+                  {tab === "query" && "Query Params"}
+                </button>
+              ))}
             </div>
 
-            {/* ⭐ SUB-TAB CONTENT */}
+            {/* SUB-TAB CONTENT */}
             {requestTab === "auth" && (
               <div className="rounded-lg border border-gray-700 bg-[#0b1220] p-5">
                 <AuthPanel onChange={setAuth} />
@@ -243,11 +270,12 @@ export default function App() {
               />
             )}
 
-            {/* ⭐ QUERY PARAMS TAB */}
             {requestTab === "query" && (
               <div className="space-y-4">
                 {queryParams.length === 0 && (
-                  <p className="text-gray-400 text-sm">No query parameters added.</p>
+                  <p className="text-gray-400 text-sm">
+                    No query parameters added.
+                  </p>
                 )}
 
                 {queryParams.map((param, index) => (
@@ -264,14 +292,18 @@ export default function App() {
                       className="px-3 py-2 rounded-md bg-[#0f172a] border border-gray-600 text-sm w-1/3"
                       placeholder="key"
                       value={param.key}
-                      onChange={(e) => updateQueryParam(index, "key", e.target.value)}
+                      onChange={(e) =>
+                        updateQueryParam(index, "key", e.target.value)
+                      }
                     />
 
                     <input
                       className="px-3 py-2 rounded-md bg-[#0f172a] border border-gray-600 text-sm flex-1"
                       placeholder="value"
                       value={param.value}
-                      onChange={(e) => updateQueryParam(index, "value", e.target.value)}
+                      onChange={(e) =>
+                        updateQueryParam(index, "value", e.target.value)
+                      }
                     />
 
                     <button
@@ -292,7 +324,7 @@ export default function App() {
               </div>
             )}
 
-            {/* ⭐ RESPONSE */}
+            {/* RESPONSE */}
             <section className="bg-[#1e293b] border border-gray-700 rounded-xl shadow-lg p-6 min-h-[240px]">
               {response ? (
                 <>
@@ -318,7 +350,10 @@ export default function App() {
 
                   <div>
                     <span className="font-semibold">Body:</span>
-                    <PrettyResponse body={response.Body} headers={response.Headers} />
+                    <PrettyResponse
+                      body={response.Body}
+                      headers={response.Headers}
+                    />
                   </div>
                 </>
               ) : (
@@ -330,7 +365,7 @@ export default function App() {
           </section>
         )}
 
-        {/* ⭐ VARIABLES TAB */}
+        {/* VARIABLES TAB */}
         {activeTab === "variables" && (
           <section className="bg-[#1e293b] border border-gray-700 rounded-xl shadow-lg p-6 space-y-4">
             <h2 className="text-lg font-semibold">Variables</h2>
